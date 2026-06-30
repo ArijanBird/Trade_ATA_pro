@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>A.T.A – AI Trading Alerts</title>
+  <meta name="application-name" content="A.T.A"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="A.T.A"/>
+  <meta name="theme-color" content="#07070f"/>
+  <meta name="description" content="AI-powered trading alerts. Know before the market moves."/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="icon" type="image/png" href="icons/icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="app">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="logo">A<em>.</em>T<em>.</em>A <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px;">AI Trading Alerts</span></div>
+    <div class="scan-status"><div class="dot"></div><span id="scanTxt">Live</span></div>
+  </div>
+
+  <div class="screens">
+    <!-- DASHBOARD -->
+    <div id="screen-dash" class="screen on">
+      <div class="ticker-strip" id="tickerStrip"></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-l">ALERTS</div><div class="stat-v" id="stAlerts">0</div></div>
+        <div class="stat"><div class="stat-l">TREND</div><div class="stat-v" id="stSent" style="color:var(--green)">Bullish</div></div>
+        <div class="stat"><div class="stat-l">VOLATILITY</div><div class="stat-v" id="stVol" style="color:var(--amber)">Med</div></div>
+      </div>
+      <div class="sec-head">RECENT ALERTS</div>
+      <div id="alertList">
+        <div class="no-alerts">
+          <div class="pulse-ring"></div>
+          Scanning for significant movements...<br/>
+          <span style="font-size:10px;">Alerts trigger on ±2–5% moves</span>
+        </div>
+      </div>
+      <div class="disclaimer">For informational purposes only — not financial advice.</div>
+    </div>
+
+    <!-- DETAIL -->
+    <div id="screen-detail" class="screen">
+      <button class="dback" id="detailBack">← Back</button>
+      <div class="dheader">
+        <div>
+          <div class="dasset" id="d-asset">—</div>
+          <div class="dprice" id="d-exch">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="dchg" id="d-chg">—</div>
+          <div style="font-size:12px;color:var(--muted)" id="d-price">—</div>
+        </div>
+      </div>
+      <canvas id="chart" height="160"></canvas>
+      <div class="dmetrics">
+        <div class="dm"><div class="dm-l">SIGNAL</div><div class="dm-v" id="d-sig">—</div></div>
+        <div class="dm"><div class="dm-l">RISK</div><div class="dm-v" id="d-risk">—</div></div>
+        <div class="dm"><div class="dm-l">CONFIDENCE</div><div class="dm-v" id="d-conf-num">—</div></div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-hdr">
+          <div class="ai-spinner" id="aiSpinner"></div>
+          <span>AI ANALYSIS</span>
+        </div>
+        <div class="ai-body" id="aiBody">Generating analysis...</div>
+      </div>
+      <div class="conf-wrap">
+        <div class="conf-lbl"><span>AI Confidence</span><span id="d-conf-lbl">0%</span></div>
+        <div class="conf-track"><div class="conf-fill" id="confFill" style="width:0%"></div></div>
+      </div>
+      <div class="disclaimer">Informational only — not a recommendation to buy or sell.</div>
+    </div>
+
+    <!-- INSIDER -->
+    <div id="screen-insider" class="screen">
+      <div class="sec-head" style="padding-top:10px;">INSIDER ACTIVITY · SIMULATED DATA</div>
+      <div id="insiderList"></div>
+      <div class="disclaimer">Simulated insider data for demo purposes only. Not real SEC filings.</div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="screen-settings" class="screen">
+      <div class="install-banner">
+        <div class="install-title">Install A.T.A on your phone</div>
+        <div class="install-desc">
+          On iPhone: tap the Share button in Safari, then "Add to Home Screen".<br/>
+          On Android: tap the menu (⋮) in Chrome, then "Add to Home Screen".
+        </div>
+        <button class="install-btn" id="installBtn">Install App</button>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">ALERT SETTINGS</div>
+        <div class="srow">
+          <div><div class="srow-label">Push Notifications</div><div class="srow-sub">Alerts even when app is closed</div></div>
+          <div class="toggle" id="togNotif" onclick="toggleSetting('notif')"></div>
+        </div>
+        <div class="srow">
+          <div><div class="srow-label">Alert Threshold</div><div class="srow-sub">Trigger on moves above</div></div>
+          <div class="threshold-val" id="threshVal">2%</div>
+        </div>
+        <div style="padding:0 0 8px;">
+          <input type="range" min="1" max="5" value="2" step="1" id="threshSlider"
+            style="width:100%;accent-color:var(--pink);background:transparent;margin-top:4px;"
+            oninput="document.getElementById('threshVal').textContent=this.value+'%'"/>
+        </div>
+        <div class="srow">
+          <div><div class="srow-label">Sound Alerts</div><div class="srow-sub">Play sound on new alert</div></div>
+          <div class="toggle on" id="togSound" onclick="toggleSetting('sound')"></div>
+        </div>
+        <div class="srow">
+          <div><div class="srow-label">Insider Signals</div><div class="srow-sub">Include insider activity alerts</div></div>
+          <div class="toggle on" id="togInsider" onclick="toggleSetting('insider')"></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">ABOUT</div>
+        <div class="srow"><div><div class="srow-label">Version</div></div><div style="font-size:11px;color:var(--muted);">1.0.0 PWA</div></div>
+        <div class="srow"><div><div class="srow-label">AI Model</div></div><div style="font-size:11px;color:var(--muted);">Claude Sonnet</div></div>
+        <div class="srow"><div><div class="srow-label">Data Mode</div></div><div style="font-size:11px;color:var(--amber);">Simulated</div></div>
+      </div>
+      <div class="disclaimer">A.T.A does not provide financial advice. All data is simulated for demonstration purposes.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottomnav">
+    <button class="bntab on" onclick="goTab('dash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="bntab" onclick="goTab('insider',this)">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Insider
+    </button>
+    <button class="bntab" onclick="goTab('settings',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script src="app.js"></script>
+</body>
+</html>
